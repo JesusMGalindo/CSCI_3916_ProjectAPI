@@ -1,7 +1,7 @@
 const router  = require('express').Router();
 const jwtLib  = require('jsonwebtoken');
 const jwtUtil = require('../utils/auth_jwt');
-const Task    = require('../models/Task');
+const Task    = require('../models/task');
 
 // ── JWT auth middleware
 router.use((req, res, next) => {

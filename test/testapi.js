@@ -6,7 +6,7 @@ require('dotenv').config({ path: '.env' });
 const app = require('../src');   // express app
 const mongoose = require('mongoose');
 const User = require('../src/models/User');
-const Task = require('../src/models/Task');
+const Task = require('../src/models/task');
 
 describe('Chapter‑22 API routes', function () {
   this.timeout(10000);           // Mongo startup may take a sec

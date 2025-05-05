@@ -1,6 +1,6 @@
 require('dotenv').config();
 require('../db');
-const Task = require('../models/Task');
+const Task = require('../models/task');
 
 (async function run() {
   const now   = new Date();
