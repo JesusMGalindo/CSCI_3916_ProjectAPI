@@ -1,139 +1,88 @@
-/*
- * task.routes.test.js  ‑ v2
- * Integration tests for Chapter‑22 Task‑Manager API
- */
-require('dotenv').config({ path: __dirname + '/../.env' });
+/* eslint-disable node/no-unpublished-require */
+const request = require('supertest');
+const { expect } = require('chai');
+require('dotenv').config({ path: '.env' });
 
-const chai     = require('chai');
-const chaiHttp = require('chai-http');
-const server   = require('../server');
-const User     = require('../Users');
-const Task     = require('../tasks');
+const app = require('../src');   // express app
+const mongoose = require('mongoose');
+const User = require('../src/models/User');
+const Task = require('../src/models/Task');
 
-chai.should();
-chai.use(chaiHttp);
+describe('Chapter‑22 API routes', function () {
+  this.timeout(10000);           // Mongo startup may take a sec
+  let token;
+  let taskId;
 
-// ── fixtures ───────────────────────────────────────────────────────
-const login_details = {
-  name:     'test‑user',
-  username: 'tester@example.com',
-  email:    'tester@example.com',
-  password: 'Passw0rd!'
-};
+  const agent = request.agent(app);
+  const creds = { username: 'testuser', email: 'test@mail.com', password: 'pass123' };
 
-const task_details = {
-  title:    'Write Mocha tests',
-  priority: 'high'
-};
-
-let token  = '';
-let taskId = '';
-
-// ── suite ──────────────────────────────────────────────────────────
-describe('Task Manager API', () => {
-
+  // ──────────────────────────────────────────────────────────────────────────
   before(async () => {
-    await User.deleteOne({ username: login_details.username });
-    await Task.deleteMany({ title: task_details.title });
+    await mongoose.connect(process.env.DB);
+    await User.deleteMany({});
+    await Task.deleteMany({});
   });
 
   after(async () => {
-    await User.deleteOne({ username: login_details.username });
-    await Task.deleteMany({ title: task_details.title });
+    await mongoose.disconnect();
   });
 
-  /* 1 ▸ SIGN‑UP + SIGN‑IN ---------------------------------------- */
-  it('should SIGN‑UP, SIGN‑IN and get JWT', (done) => {
-    chai.request(server)
-      .post('/signup')
-      .send(login_details)
-      .end(() => {
-        chai.request(server)
-          .post('/signin')
-          .send({ username: login_details.username, password: login_details.password })
-          .end((_, res) => {
-            res.should.have.status(200);
-            token = res.body.token.split(' ')[1];
-            done();
-          });
-      });
+  // ──────────────────────────────────────────────────────────────────────────
+  it('POST /signup → creates user & returns JWT', async () => {
+    const res = await agent.post('/api/signup').send(creds).expect(201);
+    expect(res.body).to.have.property('token');
   });
 
-  /* 2 ▸ CREATE ---------------------------------------------------- */
-  it('should CREATE a task', (done) => {
-    chai.request(server)
-      .post('/tasks')
+  it('POST /signin → returns JWT', async () => {
+    const res = await agent.post('/api/signin')
+      .send({ username: creds.username, password: creds.password })
+      .expect(200);
+
+    expect(res.body).to.have.property('token');
+    token = res.body.token;
+  });
+
+  it('POST /api/tasks → creates task', async () => {
+    const res = await agent.post('/api/tasks')
       .set('Authorization', `JWT ${token}`)
-      .send(task_details)
-      .end((_, res) => {
-        res.should.have.status(201);
-        taskId = res.body.task._id;
-        done();
-      });
+      .send({ title: 'Write tests', priority: 'high' })
+      .expect(201);
+
+    expect(res.body.title).to.equal('Write tests');
+    taskId = res.body._id;
   });
 
-  /* 3 ▸ COMPLETE -------------------------------------------------- */
-  it('should MARK the task complete', (done) => {
-    chai.request(server)
-      .patch(`/tasks/${taskId}/complete`)          // explicit endpoint
+  it('GET /api/tasks → returns our task', async () => {
+    const res = await agent.get('/api/tasks')
       .set('Authorization', `JWT ${token}`)
-      .end((_, res) => {
-        res.should.have.status(200);
-        res.body.task.isCompleted.should.be.true;
-        done();
-      });
+      .expect(200);
+
+    expect(res.body).to.be.an('array').with.lengthOf(1);
+    expect(res.body[0]._id).to.equal(taskId);
   });
 
-  /* 4 ▸ UN‑COMPLETE (optional body) ------------------------------- */
-  it('should MARK the task incomplete', (done) => {
-    chai.request(server)
-      .patch(`/tasks/${taskId}/complete`)
+  it('PUT /api/tasks/:id → updates task', async () => {
+    const res = await agent.put(`/api/tasks/${taskId}`)
       .set('Authorization', `JWT ${token}`)
-      .send({ isCompleted: false })
-      .end((_, res) => {
-        res.should.have.status(200);
-        res.body.task.isCompleted.should.be.false;
-        done();
-      });
+      .send({ isCompleted: true })
+      .expect(200);
+
+    expect(res.body.isCompleted).to.be.true;
   });
 
-  /* 5 ▸ LIST completed=false filter ------------------------------ */
-  it('should LIST only incomplete tasks when completed=false', (done) => {
-    chai.request(server)
-      .get('/tasks?completed=false')
+  it('DELETE /api/tasks/:id → removes task', async () => {
+    await agent.delete(`/api/tasks/${taskId}`)
       .set('Authorization', `JWT ${token}`)
-      .end((_, res) => {
-        res.should.have.status(200);
-        res.body.should.be.an('array');
-        res.body.length.should.be.eql(1);
-        res.body[0]._id.should.equal(taskId);
-        done();
-      });
-  });
+      .expect(204);
 
-  /* 6 ▸ UPDATE title --------------------------------------------- */
-  it('should UPDATE the task title', (done) => {
-    chai.request(server)
-      .put(`/tasks/${taskId}`)
+    const res = await agent.get('/api/tasks')
       .set('Authorization', `JWT ${token}`)
-      .send({ title: 'Write MORE Mocha tests' })
-      .end((_, res) => {
-        res.should.have.status(200);
-        res.body.task.title.should.equal('Write MORE Mocha tests');
-        done();
-      });
+      .expect(200);
+
+    expect(res.body).to.be.an('array').that.is.empty;
   });
 
-  /* 7 ▸ DELETE ---------------------------------------------------- */
-  it('should DELETE the task', (done) => {
-    chai.request(server)
-      .delete(`/tasks/${taskId}`)
-      .set('Authorization', `JWT ${token}`)
-      .end((_, res) => {
-        res.should.have.status(200);
-        res.body.success.should.be.true;
-        done();
-      });
+  it('GET /api/tasks without token → 401', async () => {
+    await agent.get('/api/tasks').expect(401);
   });
-
 });
