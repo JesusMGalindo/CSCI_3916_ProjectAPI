@@ -1,11 +1,14 @@
+const cors  = require('cors');
 const express  = require('express');
 const morgan   = require('morgan');
 const authRt   = require('./routes/auth');
 const taskRt   = require('./routes/tasks');
 
+
 const app = express();
 
 // ── middleware
+app.use(cors()); 
 app.use(morgan('dev'));
 app.use(express.json());
 
