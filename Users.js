@@ -26,10 +26,9 @@ UserSchema.pre('save', function (next) {
   });
 });
 
-// Compare a candidate password on login
+// Compare a password on login
 UserSchema.methods.comparePassword = function (candidate, cb) {
   bcrypt.compare(candidate, this.password, (err, isMatch) => cb(err, isMatch));
 };
 
-//Export the model
 module.exports = mongoose.model('User', UserSchema);

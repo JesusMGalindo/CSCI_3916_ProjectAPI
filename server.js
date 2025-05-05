@@ -1,8 +1,3 @@
-/*
-Chapter 22 Task‑Manager ‑ server.js
-Scaffolding adapted from the original Movie API example.
-*/
-
 require('dotenv').config();                // .env → process.env
 
 const express        = require('express');
@@ -11,9 +6,9 @@ const passport       = require('passport');
 const jwt            = require('jsonwebtoken');
 const cors           = require('cors');
 
-const authController     = require('./auth');        // Basic strategy (optional)
-const authJwtController  = require('./auth_jwt');    // JWT strategy + helpers
-const { connect }        = require('./db');          // Mongo bootstrap
+const authController     = require('./auth');        
+const authJwtController  = require('./auth_jwt');    
+const { connect }        = require('./db');          
 const User               = require('./Users');
 const Task               = require('./tasks');
 

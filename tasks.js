@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const TaskSchema = new mongoose.Schema(
   {
-    userId: {                       // owner
+    userId: {                    
       type: mongoose.Schema.Types.ObjectId,
       ref:  'User',
       required: true,
@@ -21,10 +21,9 @@ const TaskSchema = new mongoose.Schema(
     dueDate:     { type: Date },
     isCompleted: { type: Boolean, default: false },
   },
-  { timestamps: true }              // adds createdAt / updatedAt
+  { timestamps: true }              
 );
 
-/* ── VIRTUAL: isOverdue ─────────────────────────────────────────── */
 TaskSchema.virtual('isOverdue').get(function () {
     return (
       !this.isCompleted &&
@@ -33,7 +32,7 @@ TaskSchema.virtual('isOverdue').get(function () {
     );
   });
   
-/* ── STATIC: findOverdue() ──────────────────────────────────────── */
+
 TaskSchema.statics.findOverdue = function (userId) {
     return this.find({
       userId,

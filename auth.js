@@ -1,10 +1,9 @@
-// auth.js  – Passport Basic strategy
 const passport      = require('passport');
 const { BasicStrategy } = require('passport-http');
 const bcrypt        = require('bcrypt-nodejs');
 const User          = require('./Users');
 
-// Look up the user in Mongo and verify the password
+
 passport.use(
   new BasicStrategy(async (username, password, done) => {
     try {
@@ -13,7 +12,7 @@ passport.use(
 
       user.comparePassword(password, (err, isMatch) => {
         if (err || !isMatch) return done(null, false);
-        // Strip hash before attaching to req.user
+        
         user.password = undefined;
         return done(null, user);
       });

@@ -1,4 +1,3 @@
-// auth_jwt.js
 const passport      = require('passport');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const jwt           = require('jsonwebtoken');
@@ -6,13 +5,12 @@ const User          = require('./Users');
 
 const JWT_SECRET = process.env.SECRET_KEY || 'supersecret';
 
-// Which header carries the token?
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'), // "Authorization: JWT <token>"
   secretOrKey: JWT_SECRET,
 };
 
-// Verify token payload → find user
+
 passport.use(
   new JwtStrategy(opts, async (jwt_payload, done) => {
     try {
@@ -24,7 +22,6 @@ passport.use(
   })
 );
 
-// Helper to sign a new token after login or signup
 exports.issueToken = (user) =>
   jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, {
     expiresIn: '7d',

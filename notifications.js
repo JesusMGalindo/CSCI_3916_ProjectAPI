@@ -1,4 +1,3 @@
-// models/Notifications.js
 const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
@@ -12,7 +11,7 @@ const NotificationSchema = new Schema(
     type:   { type: String, enum: ['dueSoon', 'overdue'], required: true },
     sentAt: { type: Date, default: Date.now },
 
-    // optional: mark whether the user has already dismissed the alert
+    
     read:   { type: Boolean, default: false }
   },
   { timestamps: true }

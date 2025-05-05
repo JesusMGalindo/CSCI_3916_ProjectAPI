@@ -1,6 +1,3 @@
-/* jobs/overdueNotifier.js
- * Hourly cron: send email + create Notification once per overdue task
- */
 require('dotenv').config();
 const cron        = require('node-cron');
 const { connect } = require('../db');

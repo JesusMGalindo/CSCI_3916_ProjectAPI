@@ -1,20 +1,12 @@
-/**
- * db.js  – central Mongo / Mongoose bootstrap
- * Replace the old “userList” in‑memory helper.
- */
 const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise;                    // explicit but optional
 
 const DB_URI = process.env.DB;
 
-/* ------------------------------------------------------------------ *
- *  Connect once and re‑use the promise so multiple `require()` calls *
- *  don’t open parallel sockets.                                      *
- * ------------------------------------------------------------------ */
 function connect() {
   if (mongoose.connection.readyState >= 1) {
-    // already connected or connecting – return existing promise
+    
     return mongoose.connection.asPromise();
   }
 
